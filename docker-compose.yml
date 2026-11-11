@@ -1,0 +1,35 @@
+services:
+  pmng-mysql:
+    image: mysql:8.4
+    container_name: pmng-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: people-dev
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  service:
+    build: ./service
+    container_name: pmng-service
+    ports:
+      - "8089:8080"
+    depends_on:
+      pmng-mysql:
+        condition: service_healthy
+
+  client:
+    build: ./client
+    container_name: pmng-client
+    ports:
+      - "80:80"
+    depends_on:
+      - service
+
+volumes:
+  mysql-data:
